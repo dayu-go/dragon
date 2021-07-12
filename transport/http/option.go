@@ -3,7 +3,7 @@ package http
 import (
 	"time"
 
-	"github.com/dayu-go/dragon/log"
+	"github.com/dayu-go/gkit/log"
 )
 
 // ServerOption is HTTP server option.
@@ -17,7 +17,7 @@ func Network(network string) ServerOption {
 }
 
 // Address with server address
-func Addr(address string) ServerOption {
+func Address(address string) ServerOption {
 	return func(s *Server) {
 		s.address = address
 	}

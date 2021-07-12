@@ -30,16 +30,3 @@ func TestServer(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
-// func testClient(t *testing.T, srv *Server) {
-// 	tests := []struct {
-// 		method string
-// 		path   string
-// 	}{
-// 		{"GET", "/index"},
-// 		{"PUT", "/index"},
-// 		{"POST", "/index"},
-// 		{"PATCH", "/index"},
-// 		{"DELETE", "/index"},
-// 	}
-// }

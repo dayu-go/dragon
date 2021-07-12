@@ -23,68 +23,29 @@ func (h *Helper) Infow(kv ...interface{}) {
 	h.Logger.Fields(h.fields).Log(LevelInfo, kv...)
 }
 
-// func (h *Helper) Debug(a ...interface{}) {
-// 	if !h.level.Enabled(LevelDebug) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelDebug).Log(fmt.Print(a...))
-// }
+func (h *Helper) Debug(a ...interface{}) {
+	h.Logger.Fields(h.fields).Log(LevelDebug, "msg", fmt.Sprint(a...))
+}
 
-// func (h *Helper) Debugf(format string, a ...interface{}) {
-// 	if !h.level.Enabled(LevelDebug) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelDebug).Log("msg", fmt.Sprintf(format, a...))
-// }
+func (h *Helper) Debugf(format string, a ...interface{}) {
+	h.Logger.Fields(h.fields).Log(LevelDebug, "msg", fmt.Sprintf(format, a...))
+}
 
-// func (h *Helper) Debugw(kv ...interface{}) {
-// 	if !h.level.Enabled(LevelDebug) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelDebug).Log(kv...)
-// }
+func (h *Helper) Debugw(kv ...interface{}) {
+	h.Logger.Fields(h.fields).Log(LevelDebug, kv...)
+}
 
-// func (h *Helper) Warn(a ...interface{}) {
-// 	if !h.level.Enabled(LevelWarn) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelWarn).Log(fmt.Print(a...))
-// }
+func (h *Helper) Error(a ...interface{}) {
+	h.Logger.Fields(h.fields).Log(LevelDebug, "msg", fmt.Sprint(a...))
+}
 
-// func (h *Helper) Warnf(format string, a ...interface{}) {
-// 	if !h.level.Enabled(LevelWarn) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelWarn).Log("msg", fmt.Sprintf(format, a...))
-// }
+func (h *Helper) Errorf(format string, a ...interface{}) {
+	h.Logger.Fields(h.fields).Log(LevelDebug, "msg", fmt.Sprint(a...))
+}
 
-// func (h *Helper) Warnw(kv ...interface{}) {
-// 	if !h.level.Enabled(LevelWarn) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelWarn).Log(kv...)
-// }
-
-// func (h *Helper) Error(a ...interface{}) {
-// 	if !h.level.Enabled(LevelError) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelError).Log(fmt.Print(a...))
-// }
-
-// func (h *Helper) Errorf(format string, a ...interface{}) {
-// 	if !h.level.Enabled(LevelError) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelError).Log("msg", fmt.Sprintf(format, a...))
-// }
-
-// func (h *Helper) Errorw(kv ...interface{}) {
-// 	if !h.level.Enabled(LevelError) {
-// 		return
-// 	}
-// 	With(h.Logger, LevelKey, LevelError).Log(kv...)
-// }
+func (h *Helper) Errorw(kv ...interface{}) {
+	h.Logger.Fields(h.fields).Log(LevelError, kv...)
+}
 
 func (h *Helper) WithError(err error) *Helper {
 	fields := copyFields(h.fields)

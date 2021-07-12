@@ -3,12 +3,13 @@ package http
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"time"
 
-	"github.com/dayu-go/dragon/log"
-	"github.com/dayu-go/dragon/transport"
+	"github.com/dayu-go/gkit/log"
+	"github.com/dayu-go/gkit/transport"
 	"github.com/gorilla/mux"
 )
 
@@ -23,12 +24,12 @@ type Server struct {
 	log     *log.Helper
 }
 
-// NewServer creates a HTTP server by options.
+// NewServer creates an HTTP server by options.
 func NewServer(opts ...ServerOption) *Server {
 	srv := &Server{
 		network: "tcp",
-		address: ":9999",
-		timeout: time.Second,
+		address: ":0",
+		timeout: 1 * time.Second,
 		log:     log.NewHelper(log.DefaultLogger),
 	}
 	for _, o := range opts {
@@ -56,14 +57,22 @@ func (s *Server) HandleFunc(path string, h http.HandlerFunc) {
 
 // ServeHTTP should write reply headers and data to the ResponseWriter and then return.
 func (s *Server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	ctx, cancel := context.WithTimeout(req.Context(), s.timeout)
-	defer cancel()
-	ctx = transport.NewContext(ctx, transport.Transport{Kind: transport.KindHTTP})
-	s.router.ServeHTTP(res, req.WithContext(ctx))
+	s.router.ServeHTTP(res, req)
+}
+
+// Endpoint return a real address to registry endpoint.
+// examples:
+// http://127.0.0.1:8000?isSecure=false
+func (s *Server) Endpoint() (string, error) {
+	addr, err := transport.Extract(s.address, s.lis)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("http://%s", addr), nil
 }
 
 // Start start the HTTP server.
-func (s *Server) Start() error {
+func (s *Server) Start(ctx context.Context) error {
 	lis, err := net.Listen(s.network, s.address)
 	if err != nil {
 		return err
@@ -77,7 +86,7 @@ func (s *Server) Start() error {
 }
 
 // Stop stop the HTTP server.
-func (s *Server) Stop() error {
+func (s *Server) Stop(ctx context.Context) error {
 	s.log.Info("[HTTP] server stopping")
 	return s.Shutdown(context.Background())
 }

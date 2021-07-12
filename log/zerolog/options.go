@@ -3,7 +3,7 @@ package zerolog
 import (
 	"io"
 
-	"github.com/dayu-go/dragon/log"
+	"github.com/dayu-go/gkit/log"
 )
 
 type Mode uint8

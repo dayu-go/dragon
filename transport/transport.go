@@ -4,8 +4,9 @@ import "context"
 
 // Server is transport server
 type Server interface {
-	Start() error
-	Stop() error
+	Endpoint() (string, error)
+	Start(context.Context) error
+	Stop(context.Context) error
 }
 
 type Transport struct {
