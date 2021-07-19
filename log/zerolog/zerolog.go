@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dayu-go/dragon/log"
+	"github.com/dayu-go/gkit/log"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
 )

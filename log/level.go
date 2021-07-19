@@ -20,6 +20,8 @@ const (
 	LevelWarn
 	// LevelError is logger error level.
 	LevelError
+	// LevelFatal is logger fatal level.
+	LevelFatal
 )
 
 func (l Level) String() string {
@@ -32,6 +34,8 @@ func (l Level) String() string {
 		return "WARN"
 	case LevelError:
 		return "ERROR"
+	case LevelFatal:
+		return "FATAL"
 	default:
 		return ""
 	}
@@ -48,6 +52,8 @@ func ParseLevel(s string) Level {
 		return LevelWarn
 	case "ERROR":
 		return LevelError
+	case "FATAL":
+		return LevelFatal
 	}
 	return LevelInfo
 }
@@ -86,4 +92,12 @@ func Error(a ...interface{}) {
 
 func Errorf(format string, a ...interface{}) {
 	DefaultLogger.Log(LevelError, "msg", fmt.Sprintf(format, a...))
+}
+
+func Fatal(a ...interface{}) {
+	DefaultLogger.Log(LevelFatal, "msg", fmt.Sprint(a...))
+}
+
+func Fatalf(format string, a ...interface{}) {
+	DefaultLogger.Log(LevelFatal, "msg", fmt.Sprintf(format, a...))
 }

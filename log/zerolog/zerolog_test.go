@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dayu-go/dragon/log"
+	"github.com/dayu-go/gkit/log"
 )
 
 // go test -v *.go -test.run=TestLogger
