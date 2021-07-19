@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"testing"
@@ -22,11 +23,11 @@ func TestServer(t *testing.T) {
 	srv.HandleFunc("/index", fn)
 
 	time.AfterFunc(time.Second, func() {
-		// defer srv.Stop()
+		defer srv.Stop(context.TODO())
 
 	})
 
-	if err := srv.Start(); err != nil {
+	if err := srv.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 }
