@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dayu-go/gkit/log"
+	"github.com/dayu-go/gkit/middleware"
 )
 
 // ServerOption is HTTP server option.
@@ -33,5 +34,12 @@ func Timeout(t time.Duration) ServerOption {
 func Logger(logger log.Logger) ServerOption {
 	return func(s *Server) {
 		s.log = log.NewHelper(log.DefaultLogger)
+	}
+}
+
+// Middleware with service middleware option.
+func Middleware(m ...middleware.Middleware) ServerOption {
+	return func(s *Server) {
+		s.ms = m
 	}
 }

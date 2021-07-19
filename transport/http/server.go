@@ -2,13 +2,16 @@ package http
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net"
 	"net/http"
+	"net/url"
+	"sync"
 	"time"
 
+	"github.com/dayu-go/gkit/errors"
+
 	"github.com/dayu-go/gkit/log"
+	"github.com/dayu-go/gkit/middleware"
 	"github.com/dayu-go/gkit/transport"
 	"github.com/gorilla/mux"
 )
@@ -16,12 +19,16 @@ import (
 // Server is a HTTP server wrapper.
 type Server struct {
 	*http.Server
-	lis     net.Listener
-	network string
-	address string
-	timeout time.Duration
-	router  *mux.Router
-	log     *log.Helper
+	lis      net.Listener
+	endpoint *url.URL
+	once     sync.Once
+	network  string
+	address  string
+	timeout  time.Duration
+	ms       []middleware.Middleware
+	router   *mux.Router
+	log      *log.Helper
+	err      error
 }
 
 // NewServer creates an HTTP server by options.
@@ -35,8 +42,9 @@ func NewServer(opts ...ServerOption) *Server {
 	for _, o := range opts {
 		o(srv)
 	}
-	srv.router = mux.NewRouter()
+
 	srv.Server = &http.Server{Handler: srv}
+	srv.router = mux.NewRouter()
 	return srv
 }
 
@@ -57,29 +65,75 @@ func (s *Server) HandleFunc(path string, h http.HandlerFunc) {
 
 // ServeHTTP should write reply headers and data to the ResponseWriter and then return.
 func (s *Server) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	s.router.ServeHTTP(res, req)
+	ctx, cancel := context.WithCancel(req.Context())
+	defer cancel()
+	if s.timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, s.timeout)
+		defer cancel()
+	}
+	pathTemplate := req.URL.Path
+	if route := mux.CurrentRoute(req); route != nil {
+		// /path/123 -> /path/{id}
+		pathTemplate, _ = route.GetPathTemplate()
+	}
+
+	tr := &Transport{
+		endpoint:     s.endpoint.String(),
+		operation:    pathTemplate,
+		reqHeader:    headerCarrier(req.Header),
+		replyHeader:  headerCarrier(res.Header()),
+		request:      req,
+		pathTemplate: pathTemplate,
+	}
+	ctx = transport.NewServerContext(ctx, tr)
+	// s.router.ServeHTTP(res, req.WithContext(ctx))
+
+	// middleware
+	h := func(ctx context.Context, req interface{}) (interface{}, error) {
+		s.router.ServeHTTP(res, req.(*http.Request))
+		return res, nil
+	}
+	if len(s.ms) > 0 {
+		h = middleware.Chain(s.ms...)(h)
+	}
+	h(ctx, req)
 }
 
 // Endpoint return a real address to registry endpoint.
 // examples:
 // http://127.0.0.1:8000?isSecure=false
-func (s *Server) Endpoint() (string, error) {
-	addr, err := transport.Extract(s.address, s.lis)
-	if err != nil {
-		return "", err
+func (s *Server) Endpoint() (*url.URL, error) {
+	s.once.Do(func() {
+		lis, err := net.Listen(s.network, s.address)
+		if err != nil {
+			s.err = err
+			return
+		}
+		addr, err := transport.Extract(s.address, lis)
+		if err != nil {
+			lis.Close()
+			s.err = err
+			return
+		}
+		s.lis = lis
+		s.endpoint = &url.URL{Scheme: "http", Host: addr}
+	})
+	if s.err != nil {
+		return nil, s.err
 	}
-	return fmt.Sprintf("http://%s", addr), nil
+	return s.endpoint, nil
 }
 
 // Start start the HTTP server.
 func (s *Server) Start(ctx context.Context) error {
-	lis, err := net.Listen(s.network, s.address)
-	if err != nil {
+	if _, err := s.Endpoint(); err != nil {
 		return err
 	}
-	s.lis = lis
-	s.log.Infof("[HTTP] server listening on: %s", lis.Addr().String())
-	if err := s.Serve(lis); !errors.Is(err, http.ErrServerClosed) {
+	s.BaseContext = func(net.Listener) context.Context {
+		return ctx
+	}
+	s.log.Infof("[HTTP] server listening on: %s", s.lis.Addr().String())
+	if err := s.Serve(s.lis); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 	return nil

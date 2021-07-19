@@ -33,6 +33,11 @@ func New(code int, reason, message string) *Error {
 	}
 }
 
+// Newf New(code fmt.Sprintf(format, a...))
+func Newf(code int, reason, format string, a ...interface{}) *Error {
+	return New(code, reason, fmt.Sprintf(format, a...))
+}
+
 // Errorf returns an error object for the code, message and error info.
 func Errorf(code int, reason, format string, a ...interface{}) error {
 	return New(code, reason, fmt.Sprintf(format, a...))

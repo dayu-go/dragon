@@ -16,10 +16,9 @@ import (
 
 // App is an application components lifecycle manager
 type App struct {
-	opts     options
-	ctx      context.Context
-	cancel   func()
-	instance *registry.ServiceInstance
+	opts   options
+	ctx    context.Context
+	cancel func()
 }
 
 // New create an application lifecycle manager.
@@ -43,14 +42,29 @@ func New(opts ...Option) *App {
 	}
 }
 
+// ID returns app instance id.
+func (a *App) ID() string { return a.opts.id }
+
+// Name returns service name.
+func (a *App) Name() string { return a.opts.name }
+
+// Version returns app version.
+func (a *App) Version() string { return a.opts.version }
+
+// Metadata returns service metadata.
+func (a *App) Metadata() map[string]string { return a.opts.metadata }
+
+// Endpoint returns endpoints.
+func (a *App) Endpoint() []string { return a.opts.endpoints }
+
 func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 	if len(a.opts.endpoints) == 0 {
 		for _, srv := range a.opts.servers {
 			e, err := srv.Endpoint()
-			if err == nil {
+			if err != nil {
 				return nil, err
 			}
-			a.opts.endpoints = append(a.opts.endpoints, e)
+			a.opts.endpoints = append(a.opts.endpoints, e.String())
 		}
 	}
 	return &registry.ServiceInstance{
@@ -63,7 +77,7 @@ func (a *App) buildInstance() (*registry.ServiceInstance, error) {
 }
 
 func (a *App) Run() error {
-	instance, err := a.buildInstance()
+	_, err := a.buildInstance()
 	if err != nil {
 		return err
 	}
@@ -90,11 +104,6 @@ func (a *App) Run() error {
 		})
 	}
 	wg.Wait()
-	if a.opts.registrar != nil {
-		if err := a.opts.registrar.Register(a.opts.ctx, instance); err != nil {
-			return err
-		}
-	}
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, a.opts.sigs...)
 	g.Go(func() error {
@@ -114,11 +123,6 @@ func (a *App) Run() error {
 }
 
 func (a *App) Stop() error {
-	if a.opts.registrar != nil {
-		if err := a.opts.registrar.Deregister(a.opts.ctx, a.instance); err != nil {
-			return err
-		}
-	}
 	if a.cancel != nil {
 		a.cancel()
 	}

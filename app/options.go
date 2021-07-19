@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/dayu-go/gkit/log"
-	"github.com/dayu-go/gkit/registry"
 	"github.com/dayu-go/gkit/transport"
 )
 
@@ -23,8 +22,7 @@ type options struct {
 	ctx  context.Context
 	sigs []os.Signal
 
-	logger    log.Logger
-	registrar registry.Registrar
+	logger log.Logger
 
 	servers []transport.Server
 }
